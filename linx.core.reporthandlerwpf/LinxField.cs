@@ -1,12 +1,9 @@
-﻿
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace linx.core.reporthandlerwpf
 {
     public class LinxField
     {
-
         #region ctor's
 
         #endregion
@@ -26,7 +23,7 @@ namespace linx.core.reporthandlerwpf
         {
             List<byte[]> bytes = new List<byte[]>();
 
-            bytes.Add(new byte[]{Header.FieldHeaderCharacter });
+            bytes.Add(new byte[] { Header.FieldHeaderCharacter });
             bytes.Add(new byte[] { Header.FieldType });
             bytes.Add(Header.FieldLengthInBytes);
             bytes.Add(new byte[] { Header.YPosition });

@@ -382,7 +382,6 @@ namespace linx.core.reporthandlerwpf
             return success;
         }
 
-
         public (bool, byte[]) Response(LinxPrintJob linxPrintJob, Telegram telegram)
         {
             bool success = false;
@@ -458,7 +457,7 @@ namespace linx.core.reporthandlerwpf
 
             if (success)
             {
-                if (telegram.LinxPrintJobType != LinxPrintJobTypeEnum.RasterData 
+                if (telegram.LinxPrintJobType != LinxPrintJobTypeEnum.RasterData
                     && telegram.LinxPrintJobType != LinxPrintJobTypeEnum.DeleteReport)
                     success = LinxHelper.ValidateChecksum(result.ToArray());
                 if (!success)
@@ -473,6 +472,5 @@ namespace linx.core.reporthandlerwpf
         }
 
         #endregion
-
     }
 }

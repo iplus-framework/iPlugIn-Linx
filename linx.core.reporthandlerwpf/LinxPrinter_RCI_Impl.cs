@@ -1,18 +1,11 @@
-﻿using gip.core.autocomponent;
-using gip.core.datamodel;
-using gip.core.layoutengine;
+﻿using gip.core.datamodel;
 using gip.core.reporthandler.Flowdoc;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO.Ports;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Windows.Documents;
-using static gip.core.reporthandler.LinxPrintJob;
 
 namespace linx.core.reporthandlerwpf
 {
@@ -122,7 +115,6 @@ namespace linx.core.reporthandlerwpf
             linxPrintJob.PacketsForPrint.Add(new LinxPrintJob.Telegram(LinxPrintJobTypeEnum.LoadReport, data));
         }
         #endregion
-
 
         #region Add Field Values
 
@@ -270,7 +262,6 @@ namespace linx.core.reporthandlerwpf
 
         #endregion
 
-
         #region Build Objects
 
         public virtual LinxField GetLinxField(Encoding encoding, LinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSet, string value, byte fieldType = 0x00)
@@ -333,7 +324,6 @@ namespace linx.core.reporthandlerwpf
         }
 
         #endregion
-
 
         #region Calculation methods
         public virtual List<LinxDataSetData> LoadDataSets()
@@ -453,7 +443,6 @@ namespace linx.core.reporthandlerwpf
             return (byte)height;
         }
         #endregion
-
 
         #region Binary Serialization
         private string ByteStrPresentation(List<byte[]> downloadData)

@@ -86,12 +86,12 @@ namespace linx.core.reporthandlerwpf
             return isValid;
         }
 
-        public static byte[] RemoveZeros(byte[] data) 
+        public static byte[] RemoveZeros(byte[] data)
         {
             if (data == null)
                 return data;
             int x = -1;
-            for (int i = 0; i < data.Length; i++) 
+            for (int i = 0; i < data.Length; i++)
             {
                 if (data[i] == 0)
                 {

@@ -1,19 +1,10 @@
-﻿using gip.core.autocomponent;
-using gip.core.datamodel;
-using gip.core.layoutengine;
+﻿using gip.core.datamodel;
 using gip.core.reporthandler;
 using gip.core.reporthandler.Flowdoc;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.IO.Ports;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Windows.Documents;
-using static gip.core.reporthandler.LinxPrintJob;
 
 namespace linx.core.reporthandlerwpf
 {
@@ -271,7 +262,6 @@ namespace linx.core.reporthandlerwpf
         {
         }
         #endregion
-    
-    
+
     }
 }

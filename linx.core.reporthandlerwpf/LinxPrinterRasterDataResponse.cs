@@ -1,5 +1,4 @@
-﻿using gip.core.autocomponent;
-using gip.core.datamodel;
+﻿using gip.core.datamodel;
 using System;
 using System.Text;
 using System.Collections.Generic;
@@ -10,11 +9,6 @@ namespace linx.core.reporthandlerwpf
     [ACClassInfo("gip.VarioSystem", "en{'LinxPrinterRasterDataResponse'}de{'LinxPrinterRasterDataResponse'}", Global.ACKinds.TACClass, Global.ACStorableTypes.NotStorable, false, false, "", "", 9999)]
     public class LinxPrinterRasterDataResponse
     {
-
-        /*
-
-
-         */
 
         [LinxByteMapping(Order = 1, Length = 1, DefaultValue = (byte)LinxASCIControlCharacterEnum.ESC)]
         public LinxASCIControlCharacterEnum StartCode01 { get; set; } = LinxASCIControlCharacterEnum.ESC;

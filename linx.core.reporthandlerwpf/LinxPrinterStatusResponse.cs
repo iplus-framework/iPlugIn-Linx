@@ -42,7 +42,6 @@ namespace linx.core.reporthandlerwpf
         [LinxByteMapping(Order = 8, Length = 1)]
         public byte Checksum { get; set; }
 
-
         public static byte[] GetDemoData()
         {
             return new byte[] 

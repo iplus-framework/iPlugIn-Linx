@@ -4,7 +4,7 @@ namespace linx.core.reporthandlerwpf
 {
     [ACSerializeableInfo]
     [ACClassInfo("gip.VarioSystem", "en{'LinxPrintErrorEnum'}de{'LinxPrintErrorEnum'}", Global.ACKinds.TACEnum, Global.ACStorableTypes.NotStorable, false, false, "", "", 9999)]
-    public enum LinxPrintErrorEnum: byte
+    public enum LinxPrintErrorEnum : byte
     {
         No_TOF_adjustments = 00,
         Viscosity_Temperature = 00,

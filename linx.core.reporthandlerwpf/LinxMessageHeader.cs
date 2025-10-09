@@ -7,6 +7,7 @@ namespace linx.core.reporthandlerwpf
         #region const
         public const int DefaultHeaderLength = 41;
         #endregion
+
         #region ctor's
         public LinxMessageHeader()
         {

@@ -8,7 +8,6 @@ namespace linx.core.reporthandlerwpf
     [ACClassInfo(Const.PackName_VarioSystem, "en{'LinxPrinter'}de{'LinxPrinter'}", Global.ACKinds.TPABGModule, Global.ACStorableTypes.Required, false, false)]
     public partial class LinxPrinter : ACPrintServerBase
     {
-
         #region ctor's
         public LinxPrinter(ACClass acType, IACObject content, IACObject parentACObject, ACValueList parameter, string acIdentifier = "")
            : base(acType, content, parentACObject, parameter, acIdentifier)
@@ -68,7 +67,6 @@ namespace linx.core.reporthandlerwpf
 
         #endregion
 
-
         #region Broadcast-Properties
 
         [ACPropertyBindingSource(9999, "Error", "en{'Linx printer alarm'}de{'Linx Drucker Alarm'}", "", false, false)]
@@ -82,7 +80,6 @@ namespace linx.core.reporthandlerwpf
         }
 
         #endregion
-
 
         #region Interaction Methods
 
@@ -171,7 +168,6 @@ namespace linx.core.reporthandlerwpf
         }
 
         #endregion
-
 
         #region Execute-Helper
         protected override bool HandleExecuteACMethod(out object result, AsyncMethodInvocationMode invocationMode, string acMethodName, gip.core.datamodel.ACClassMethod acClassMethod, params object[] acParameter)
