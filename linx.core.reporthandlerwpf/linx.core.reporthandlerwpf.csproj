@@ -37,4 +37,27 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.IO.Ports" Version="9.*" />
   </ItemGroup>
+	<ItemGroup>
+		<None Update="readme.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="icon.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+	<PropertyGroup>
+		<BaseOutputPath>$(SolutionDir)bin\</BaseOutputPath>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Title>iPlugIn-Linx</Title>
+		<Description>printer driver for Linx printers</Description>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageTags>iPlugIn-Linx</PackageTags>
+		<PackageProjectUrl>https://github.com/iplus-framework</PackageProjectUrl>
+		<PackageIcon>icon.png</PackageIcon>
+		<RepositoryUrl>https://github.com/iplus-framework/iPlugIn-Linx.git</RepositoryUrl>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+	</PropertyGroup>
 </Project>
