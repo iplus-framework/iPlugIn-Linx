@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8CD233D7-55FF-4650-9EB2-AADB8561176C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>linx.core.reporthandlerwpf</RootNamespace>
+    <AssemblyName>linx.core.reporthandlerwpf</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <IPlusIncludeDir>..\..\iPlusMES\bin\Debug</IPlusIncludeDir>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <IPlusIncludeDir>..\..\iPlusMES\bin\Release</IPlusIncludeDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="DocumentFormat.OpenXml, Version=2.11.3.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\DocumentFormat.OpenXml.2.11.3\lib\netstandard2.0\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="gip.core.autocomponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=12adb6357a02d860, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(IPlusIncludeDir)\gip.core.autocomponent.dll</HintPath>
+    </Reference>
+    <Reference Include="gip.core.datamodel, Version=1.0.0.0, Culture=neutral, PublicKeyToken=12adb6357a02d860, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(IPlusIncludeDir)\gip.core.datamodel.dll</HintPath>
+    </Reference>
+    <ProjectReference Include="..\..\iPlus\gip.core.layoutengine\gip.core.layoutengine.csproj">
+      <Project>{A294786A-0921-4773-A0BF-F98F5AFCAE0D}</Project>
+      <Name>gip.core.layoutengine</Name>
+    </ProjectReference>
+    <Reference Include="gip.core.reporthandler, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(IPlusIncludeDir)\gip.core.reporthandler.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="LinxASCIControlCharacterEnum.cs" />
+    <Compile Include="LinxByteMappingAttribute.cs" />
+    <Compile Include="LinxCommandStatusCodeEnum.cs" />
+    <Compile Include="LinxDataSetData.cs" />
+    <Compile Include="LinxExtendedPrintErrorEnum.cs" />
+    <Compile Include="LinxField.cs" />
+    <Compile Include="LinxFieldHeader.cs" />
+    <Compile Include="LinxHelper.cs" />
+    <Compile Include="LinxJetStateEnum.cs" />
+    <Compile Include="LinxMapping.cs" />
+    <Compile Include="LinxMessageHeader.cs" />
+    <Compile Include="LinxPrinter.cs" />
+    <Compile Include="LinxPrinterCommandCodeEnum.cs" />
+    <Compile Include="LinxPrinterCompleteStatusResponse.cs" />
+    <Compile Include="LinxPrinterFaultCodeEnum.cs" />
+    <Compile Include="LinxPrinterRasterDataResponse.cs" />
+    <Compile Include="LinxPrintErrorEnum.cs" />
+    <Compile Include="LinxPrinterStatusResponse.cs" />
+    <Compile Include="LinxPrinter_Comm.cs" />
+    <Compile Include="LinxPrinter_FlowDoc.cs" />
+    <Compile Include="LinxPrinter_PrintJob.cs" />
+    <Compile Include="LinxPrinter_RCI_Impl.cs" />
+    <Compile Include="LinxPrintJob.cs" />
+    <Compile Include="LinxPrintJobTypeEnum.cs" />
+    <Compile Include="LinxPrintModeEnum.cs" />
+    <Compile Include="LinxPrintStateEnum.cs" />
+    <Compile Include="MappingAttributeWrapper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
