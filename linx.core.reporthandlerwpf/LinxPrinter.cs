@@ -1,12 +1,12 @@
 ﻿using gip.core.autocomponent;
 using gip.core.datamodel;
-using gip.core.reporthandler;
+using gip.core.reporthandlerwpf;
 using System.Threading;
 
 namespace linx.core.reporthandlerwpf
 {
     [ACClassInfo(Const.PackName_VarioSystem, "en{'LinxPrinter'}de{'LinxPrinter'}", Global.ACKinds.TPABGModule, Global.ACStorableTypes.Required, false, false)]
-    public partial class LinxPrinter : ACPrintServerBase
+    public partial class LinxPrinter : ACPrintServerBaseWPF
     {
         #region ctor's
         public LinxPrinter(ACClass acType, IACObject content, IACObject parentACObject, ACValueList parameter, string acIdentifier = "")
