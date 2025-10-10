@@ -1,5 +1,5 @@
 ﻿using gip.core.datamodel;
-using gip.core.reporthandler.Flowdoc;
+using gip.core.reporthandlerwpf.Flowdoc;
 using System;
 using System.Collections.Generic;
 using System.Data;

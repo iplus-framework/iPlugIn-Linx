@@ -1,11 +1,12 @@
 ﻿using gip.core.layoutengine;
+using gip.core.reporthandlerwpf;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 namespace linx.core.reporthandlerwpf
 {
-    public class LinxPrintJob : gip.core.reporthandler.PrintJob
+    public class LinxPrintJob : PrintJobWPF
     {
 
         #region ctor's
