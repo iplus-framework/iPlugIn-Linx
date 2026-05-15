@@ -5,6 +5,7 @@
     <OutputType>Library</OutputType>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <UseProjectReferences Condition="'$(UseProjectReferences)' == ''">true</UseProjectReferences>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>..\bin\Debug\</OutputPath>
@@ -15,6 +16,18 @@
     <IPlusIncludeDir>..\..\iPlusMES\bin\Release\$(UITargetFramework)</IPlusIncludeDir>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Scryber.Drawing" Condition="'$(UseProjectReferences)' != 'true'">
+      <HintPath>$(IPlusIncludeDir)\Scryber.Drawing.dll</HintPath>
+    </Reference>
+    <ProjectReference Include="..\..\scryber.core\Scryber.Drawing\Scryber.Drawing.csproj" Condition="'$(UseProjectReferences)' == 'true' and Exists('..\..\scryber.core\Scryber.Drawing\Scryber.Drawing.csproj')">
+      <Name>Scryber.Drawing</Name>
+    </ProjectReference>
+    <Reference Include="Scryber.Components" Condition="'$(UseProjectReferences)' != 'true'">
+      <HintPath>$(IPlusIncludeDir)\Scryber.Components.dll</HintPath>
+    </Reference>
+    <ProjectReference Include="..\..\scryber.core\Scryber.Components\Scryber.Components.csproj" Condition="'$(UseProjectReferences)' == 'true' and Exists('..\..\scryber.core\Scryber.Components\Scryber.Components.csproj')">
+      <Name>Scryber.Components</Name>
+    </ProjectReference>
     <Reference Include="gip.core.autocomponent">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(IPlusIncludeDir)\gip.core.autocomponent.dll</HintPath>
@@ -26,16 +39,25 @@
     <Reference Include="gip.core.layoutengine">
       <HintPath>$(IPlusIncludeDir)\gip.core.layoutengine.dll</HintPath>
     </Reference>
-    <Reference Include="gip.core.reporthandler">
+    <Reference Include="gip.core.reporthandler" Condition="'$(UseProjectReferences)' != 'true'">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(IPlusIncludeDir)\gip.core.reporthandler.dll</HintPath>
     </Reference>
-    <Reference Include="gip.core.reporthandlerwpf">
+    <ProjectReference Include="..\..\iPlus\gip.core.reporthandler\gip.core.reporthandler.csproj" Condition="'$(UseProjectReferences)' == 'true'">
+      <Name>gip.core.reporthandler</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\linx.core.reporthandler\linx.core.reporthandler.csproj" Condition="Exists('..\linx.core.reporthandler\linx.core.reporthandler.csproj')">
+      <Name>linx.core.reporthandler</Name>
+    </ProjectReference>
+    <Reference Include="gip.core.reporthandlerwpf" Condition="'$(UseProjectReferences)' != 'true'">
       <HintPath>$(IPlusIncludeDir)\gip.core.reporthandlerwpf.dll</HintPath>
     </Reference>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="System.IO.Ports" Version="9.*" />
+    <ProjectReference Include="..\..\iPlus\gip.core.reporthandlerwpf\gip.core.reporthandlerwpf.csproj" Condition="'$(UseProjectReferences)' == 'true'">
+      <Name>gip.core.reporthandlerwpf</Name>
+    </ProjectReference>
+    <PackageReference Include="Microsoft.CSharp" />
+    <PackageReference Include="System.Data.DataSetExtensions" />
+    <PackageReference Include="System.IO.Ports" />
   </ItemGroup>
 	<ItemGroup>
 		<None Update="readme.md">

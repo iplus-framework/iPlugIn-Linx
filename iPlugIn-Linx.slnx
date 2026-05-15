@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="linx.core.reporthandler/linx.core.reporthandler.csproj" />
+  <Project Path="linx.core.reporthandlerwpf/linx.core.reporthandlerwpf.csproj" />
+</Solution>

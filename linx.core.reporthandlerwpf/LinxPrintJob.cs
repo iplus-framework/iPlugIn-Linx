@@ -9,6 +9,12 @@ namespace linx.core.reporthandlerwpf
     public class LinxPrintJob : PrintJobWPF
     {
 
+        private string _rasterNameOverride;
+        private int? _characterWidthOverride;
+        private bool? _isOneLineOverride;
+        private int? _interCharSpaceOverride;
+        private int? _fieldHeightDropOverride;
+
         #region ctor's
         public LinxPrintJob()
         {
@@ -23,6 +29,9 @@ namespace linx.core.reporthandlerwpf
         {
             get
             {
+                if (!string.IsNullOrWhiteSpace(_rasterNameOverride))
+                    return _rasterNameOverride;
+
                 string rasterName = null;
                 VBFlowDocument vBFlowDocument = this.FlowDocument as VBFlowDocument;
                 if (vBFlowDocument != null)
@@ -37,6 +46,9 @@ namespace linx.core.reporthandlerwpf
         {
             get
             {
+                if (_characterWidthOverride.HasValue)
+                    return _characterWidthOverride.Value;
+
                 int val = -1;
                 VBFlowDocument vBFlowDocument = this.FlowDocument as VBFlowDocument;
                 if (vBFlowDocument != null)
@@ -49,6 +61,9 @@ namespace linx.core.reporthandlerwpf
         {
             get
             {
+                if (_isOneLineOverride.HasValue)
+                    return _isOneLineOverride.Value;
+
                 string value = null;
                 VBFlowDocument vBFlowDocument = this.FlowDocument as VBFlowDocument;
                 if (vBFlowDocument != null)
@@ -63,6 +78,9 @@ namespace linx.core.reporthandlerwpf
         {
             get
             {
+                if (_interCharSpaceOverride.HasValue)
+                    return _interCharSpaceOverride.Value;
+
                 int val = -1;
                 VBFlowDocument vBFlowDocument = this.FlowDocument as VBFlowDocument;
                 if (vBFlowDocument != null)
@@ -75,12 +93,45 @@ namespace linx.core.reporthandlerwpf
         {
             get
             {
+                if (_fieldHeightDropOverride.HasValue)
+                    return _fieldHeightDropOverride.Value;
+
                 int val = -1;
                 VBFlowDocument vBFlowDocument = this.FlowDocument as VBFlowDocument;
                 if (vBFlowDocument != null)
                     val = vBFlowDocument.CustomInt03;
                 return val;
             }
+        }
+
+        public string RasterNameOverride
+        {
+            get { return _rasterNameOverride; }
+            set { _rasterNameOverride = value; }
+        }
+
+        public int? CharacterWidthOverride
+        {
+            get { return _characterWidthOverride; }
+            set { _characterWidthOverride = value; }
+        }
+
+        public bool? IsOneLineOverride
+        {
+            get { return _isOneLineOverride; }
+            set { _isOneLineOverride = value; }
+        }
+
+        public int? InterCharSpaceOverride
+        {
+            get { return _interCharSpaceOverride; }
+            set { _interCharSpaceOverride = value; }
+        }
+
+        public int? FieldHeightDropOverride
+        {
+            get { return _fieldHeightDropOverride; }
+            set { _fieldHeightDropOverride = value; }
         }
 
         //public LinxPrintJobTypeEnum LinxPrintJobType { get; set; }

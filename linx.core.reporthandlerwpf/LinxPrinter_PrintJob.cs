@@ -81,6 +81,16 @@ namespace linx.core.reporthandlerwpf
         {
             bool success = false;
 
+            if (printJob is LinxScryberPrintJob scryberJob)
+            {
+                using (ACMonitor.Lock(_61000_LockPort))
+                {
+                    Messages.LogMessage(eMsgLevel.Info, GetACUrl(), nameof(SendDataToPrinter), $"Add LinxScryberPrintJob:{scryberJob.PrintJobID} to queue...");
+                    LinxPrintJobs.Enqueue(scryberJob);
+                }
+                return true;
+            }
+
             if (printJob != null)
             {
                 LinxPrintJob linxPrintJob = (LinxPrintJob)printJob;

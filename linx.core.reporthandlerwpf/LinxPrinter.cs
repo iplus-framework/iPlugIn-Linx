@@ -2,16 +2,20 @@
 using gip.core.datamodel;
 using gip.core.reporthandlerwpf;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace linx.core.reporthandlerwpf
 {
     [ACClassInfo(Const.PackName_VarioSystem, "en{'LinxPrinter'}de{'LinxPrinter'}", Global.ACKinds.TPABGModule, Global.ACStorableTypes.Required, false, false)]
     public partial class LinxPrinter : ACPrintServerBaseWPF
     {
+        private ACPropertyConfigValue<bool> _UseScryberLayoutRenderer;
+
         #region ctor's
         public LinxPrinter(ACClass acType, IACObject content, IACObject parentACObject, ACValueList parameter, string acIdentifier = "")
            : base(acType, content, parentACObject, parameter, acIdentifier)
         {
+            _UseScryberLayoutRenderer = new ACPropertyConfigValue<bool>(this, nameof(UseScryberLayoutRenderer), true);
         }
 
         public override bool ACInit(Global.ACStartTypes startChildMode = Global.ACStartTypes.Automatic)
@@ -20,6 +24,7 @@ namespace linx.core.reporthandlerwpf
                 return false;
 
             _ = IPAddress;
+            _ = UseScryberLayoutRenderer;
 
             DataSets = LoadDataSets();
 
@@ -42,9 +47,9 @@ namespace linx.core.reporthandlerwpf
         }
 
 
-        public override bool ACDeInit(bool deleteACClassTask = false)
+        public override async Task<bool> ACDeInit(bool deleteACClassTask = false)
         {
-            bool acDeinit = base.ACDeInit(deleteACClassTask);
+            bool acDeinit = await base.ACDeInit(deleteACClassTask);
 
             if (_PollThread != null)
             {
@@ -64,6 +69,13 @@ namespace linx.core.reporthandlerwpf
 
         [ACPropertyInfo(true, 200, DefaultValue = false)]
         public bool UseRemoteReport { get; set; }
+
+        [ACPropertyConfig("en{'Use Scryber layout renderer'}de{'Scryber-Layout-Renderer verwenden'}")]
+        public bool UseScryberLayoutRenderer
+        {
+            get => _UseScryberLayoutRenderer.ValueT;
+            set => _UseScryberLayoutRenderer.ValueT = value;
+        }
 
         #endregion
 
