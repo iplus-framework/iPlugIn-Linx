@@ -6,37 +6,18 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Windows.Documents;
-using static linx.core.reporthandlerwpf.LinxPrintJob;
+using linx.core.reporthandler;
 
 namespace linx.core.reporthandlerwpf
 {
     public partial class LinxPrinter
     {
-
-        #region Properties
-        private Queue<LinxPrintJob> _LinxPrintJobs;
-        public Queue<LinxPrintJob> LinxPrintJobs
-        {
-            get
-            {
-                if (_LinxPrintJobs == null)
-                {
-                    _LinxPrintJobs = new Queue<LinxPrintJob>();
-                }
-                return _LinxPrintJobs;
-            }
-        }
-        #endregion
-
         #region Methods
-        public void EnqueueJob(LinxPrintJob linxPrintJob, string name)
+        public void EnqueueJob(ILinxPrintJob linxPrintJob, string name)
         {
-            using (ACMonitor.Lock(_61000_LockPort))
-            {
-                Messages.LogMessage(eMsgLevel.Info, GetACUrl(), nameof(StartPrint), $"Add LinxPrintJob:{linxPrintJob.PrintJobID} to queue...");
-                LinxPrintJobs.Enqueue(linxPrintJob);
-            }
+            _shared.EnqueueJob(linxPrintJob, name);
         }
+
 
         public override gip.core.reporthandler.PrintJob GetPrintJob(string reportName, FlowDocument flowDocument)
         {
@@ -81,19 +62,9 @@ namespace linx.core.reporthandlerwpf
         {
             bool success = false;
 
-            if (printJob is LinxScryberPrintJob scryberJob)
-            {
-                using (ACMonitor.Lock(_61000_LockPort))
-                {
-                    Messages.LogMessage(eMsgLevel.Info, GetACUrl(), nameof(SendDataToPrinter), $"Add LinxScryberPrintJob:{scryberJob.PrintJobID} to queue...");
-                    LinxPrintJobs.Enqueue(scryberJob);
-                }
-                return true;
-            }
-
             if (printJob != null)
             {
-                LinxPrintJob linxPrintJob = (LinxPrintJob)printJob;
+                ILinxPrintJob linxPrintJob = (ILinxPrintJob)printJob;
 
                 if (linxPrintJob != null)
                 {
@@ -115,143 +86,13 @@ namespace linx.core.reporthandlerwpf
 
         public bool ProcessJob(LinxPrintJob linxPrintJob)
         {
-            bool success = false;
-            try
-            {
-                if (linxPrintJob.State == gip.core.reporthandler.PrintJobStateEnum.New)
-                {
-                    using (ACMonitor.Lock(_61000_LockPort))
-                    {
-                        linxPrintJob.State = gip.core.reporthandler.PrintJobStateEnum.InProcess;
-                    }
-
-                    foreach (Telegram telegram in linxPrintJob.PacketsForPrint)
-                    {
-                        bool requestSuccess = Request(telegram);
-                        if (requestSuccess)
-                        {
-                            Thread.Sleep(ReceiveTimeout);
-                            (bool responseSuccess, byte[] responseData) = Response(linxPrintJob, telegram);
-                            // TODO: Linxmapping according Type of Telegram!! Temporary workaround for DeleteReport
-                            if (telegram.LinxPrintJobType != LinxPrintJobTypeEnum.DeleteReport
-                                && responseSuccess
-                                && responseData != null)
-                            {
-                                if (telegram.LinxPrintJobType == LinxPrintJobTypeEnum.CheckStatus)
-                                {
-                                    (MsgWithDetails msgWithDetails, LinxPrinterCompleteStatusResponse response) = LinxMapping<LinxPrinterCompleteStatusResponse>.Map(responseData);
-                                    if (ValidateMessage(msgWithDetails) && response != null)
-                                        PrinterCompleteStatus.ValueT = response;
-                                }
-                                else if (telegram.LinxPrintJobType == LinxPrintJobTypeEnum.RasterData)
-                                {
-                                    (MsgWithDetails msgWithDetails, LinxPrinterRasterDataResponse response) = LinxMapping<LinxPrinterRasterDataResponse>.Map(responseData);
-                                    if (ValidateMessage(msgWithDetails) && response != null)
-                                    {
-                                        response.ParseData(responseData);
-                                        string dumpedResult = response.ToString();
-                                        Messages.LogInfo(GetACUrl(), $"{nameof(LinxPrinter)}.{nameof(ProcessJob)}(120)", dumpedResult);
-                                        OnNewAlarmOccurred(LinxPrinterAlarm, dumpedResult, true);
-                                    }
-                                }
-                                else
-                                {
-                                    (MsgWithDetails msgWithDetails, LinxPrinterStatusResponse response) = LinxMapping<LinxPrinterStatusResponse>.Map(responseData);
-                                    if (ValidateMessage(msgWithDetails) && response != null)
-                                    {
-                                        if (response.P_Status > 0 || response.C_Status > 0)
-                                        {
-                                            using (ACMonitor.Lock(_61000_LockPort))
-                                            {
-                                                linxPrintJob.State = gip.core.reporthandler.PrintJobStateEnum.InAlarm;
-                                            }
-
-                                            string message = $"JobID: {linxPrintJob.PrintJobID}| Printer return P_Status: {response.P_Status}; C_Status: {response.C_Status}";
-
-                                            if (response.P_Status > 0)
-                                            {
-                                                LinxPrintErrorEnum printErrorEnum = LinxPrintErrorEnum.Remote_alarm;
-                                                if (Enum.TryParse<LinxPrintErrorEnum>(response.P_Status.ToString(), out printErrorEnum))
-                                                {
-                                                    message += System.Environment.NewLine;
-                                                    message += "Printer error code: " + printErrorEnum.ToString();
-                                                }
-                                            }
-
-                                            if (response.C_Status > 0)
-                                            {
-                                                LinxCommandStatusCodeEnum commandStatusCode = LinxCommandStatusCodeEnum.Data_overrun;
-                                                if (Enum.TryParse<LinxCommandStatusCodeEnum>(response.C_Status.ToString(), out commandStatusCode))
-                                                {
-                                                    message += System.Environment.NewLine;
-                                                    message += "Command status code: " + commandStatusCode.ToString();
-                                                }
-                                            }
-
-                                            LinxPrinterAlarm.ValueT = PANotifyState.AlarmOrFault;
-                                            if (IsAlarmActive(nameof(LinxPrinterAlarm), message) == null)
-                                            {
-                                                Messages.LogError(GetACUrl(), $"{nameof(LinxPrinter)}.{nameof(ProcessJob)}(140)", message);
-                                            }
-                                            OnNewAlarmOccurred(LinxPrinterAlarm, message, true);
-                                            if (PrinterCompleteStatus.ValueT != null)
-                                            {
-                                                PrinterCompleteStatus.ValueT.P_Status = response.P_Status;
-                                                PrinterCompleteStatus.ValueT.C_Status = response.C_Status;
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            using (ACMonitor.Lock(_61000_LockPort))
-                            {
-                                linxPrintJob.State = gip.core.reporthandler.PrintJobStateEnum.InAlarm;
-                            }
-                            break;
-                        }
-                    }
-
-
-                    using (ACMonitor.Lock(_61000_LockPort))
-                    {
-                        linxPrintJob.State = gip.core.reporthandler.PrintJobStateEnum.Done;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LinxPrinterAlarm.ValueT = PANotifyState.AlarmOrFault;
-                if (IsAlarmActive(nameof(LinxPrinterAlarm), ex.Message) == null)
-                {
-                    Messages.LogException(GetACUrl(), $"{nameof(LinxPrinter)}.{nameof(ProcessJob)}(70)", ex);
-                }
-                OnNewAlarmOccurred(LinxPrinterAlarm, ex.Message, true);
-            }
-
-            ClosePort();
-            return success;
+            return _shared.ProcessJob(linxPrintJob);                
         }
 
 
         protected bool ValidateMessage(MsgWithDetails msgWithDetails)
         {
-            if (msgWithDetails == null)
-                return false;
-            if (!msgWithDetails.IsSucceded())
-            {
-                LinxPrinterAlarm.ValueT = PANotifyState.AlarmOrFault;
-                if (IsAlarmActive(nameof(LinxPrinterAlarm), msgWithDetails.DetailsAsText) == null)
-                {
-                    Messages.LogError(GetACUrl(), $"{nameof(LinxPrinter)}.{nameof(ProcessJob)}(120)", msgWithDetails.DetailsAsText);
-                }
-                OnNewAlarmOccurred(LinxPrinterAlarm, msgWithDetails.DetailsAsText, true);
-                return false;
-            }
-            return true;
+            return _shared.ValidateMessage(msgWithDetails);
         }
         #endregion
 

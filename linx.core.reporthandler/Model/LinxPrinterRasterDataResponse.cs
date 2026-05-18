@@ -3,7 +3,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     [ACSerializeableInfo]
     [ACClassInfo("gip.VarioSystem", "en{'LinxPrinterRasterDataResponse'}de{'LinxPrinterRasterDataResponse'}", Global.ACKinds.TACClass, Global.ACStorableTypes.NotStorable, false, false, "", "", 9999)]

@@ -7,19 +7,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using linx.core.reporthandler;
-using static linx.core.reporthandlerwpf.LinxPrintJob;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
-    public partial class LinxPrinter
+    public partial class LinxPrinterX
     {
-        #region Printer
-        [ACPropertyBindingSource(9999, "Error", "en{'Linx printer alarm'}de{'Linx Drucker Alarm'}", "", false, false)]
-        public IACContainerTNet<PANotifyState> LinxPrinterAlarm { get; set; }        
-        #endregion
-
-
         #region Serial Communication
 
         protected readonly ACMonitorObject _61000_LockPort = new ACMonitorObject(61000);
@@ -53,6 +45,7 @@ namespace linx.core.reporthandlerwpf
                 _serialPort = value;
             }
         } 
+
 
         /// <summary>
         /// PortName
@@ -158,9 +151,14 @@ namespace linx.core.reporthandlerwpf
 
         #endregion
 
+        #region Printer
+        [ACPropertyBindingSource(9999, "Error", "en{'Linx printer alarm'}de{'Linx Drucker Alarm'}", "", false, false)]
+        public IACContainerTNet<PANotifyState> LinxPrinterAlarm { get; set; }        
+        #endregion
+
         #region Communication -> Open / Close port
 
-        [ACMethodInteraction(nameof(LinxPrinter), "en{'Open Connection'}de{'Öffne Verbindung'}", 200, true)]
+        [ACMethodInteraction(nameof(LinxPrinterX), "en{'Open Connection'}de{'Öffne Verbindung'}", 200, true)]
         public bool OpenPort()
         {
             return _shared.OpenPort();
@@ -171,7 +169,7 @@ namespace linx.core.reporthandlerwpf
             return _shared.IsEnabledOpenPort();
         }
 
-        [ACMethodInteraction(nameof(LinxPrinter), "en{'Close Connection'}de{'Schliesse Verbindung'}", 201, true)]
+        [ACMethodInteraction(nameof(LinxPrinterX), "en{'Close Connection'}de{'Schliesse Verbindung'}", 201, true)]
         public void ClosePort()
         {
             _shared.ClosePort();

@@ -1,4 +1,4 @@
-﻿namespace linx.core.reporthandlerwpf
+﻿namespace linx.core.reporthandler
 {
     public enum LinxPrintModeEnum : byte
     {

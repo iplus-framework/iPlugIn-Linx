@@ -1,6 +1,6 @@
 ﻿using gip.core.datamodel;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     [ACSerializeableInfo]
     [ACClassInfo("gip.VarioSystem", "en{'LinxPrintErrorEnum'}de{'LinxPrintErrorEnum'}", Global.ACKinds.TACEnum, Global.ACStorableTypes.NotStorable, false, false, "", "", 9999)]

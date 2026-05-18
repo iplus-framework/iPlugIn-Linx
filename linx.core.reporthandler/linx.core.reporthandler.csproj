@@ -34,5 +34,16 @@
       <HintPath>$(IPlusIncludeDir)\gip.core.reporthandler.dll</HintPath>
     </Reference>
     <ProjectReference Include="..\..\iPlus\gip.core.reporthandler\gip.core.reporthandler.csproj" Condition="'$(UseProjectReferences)' == 'true'" />
+     <PackageReference Include="System.IO.Ports" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="DbScripts/iPlus/dbsync_2026-05-18_15-00_dlisak.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+	<ItemGroup>
+		<None Update="VBControlScripts/2026-05-18 19-07_dlisak.zip">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>  
 </Project>

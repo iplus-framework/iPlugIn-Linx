@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     public class LinxByteMappingAttribute : Attribute
     {

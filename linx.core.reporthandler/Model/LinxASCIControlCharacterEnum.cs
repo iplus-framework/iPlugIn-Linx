@@ -1,6 +1,6 @@
 ﻿using gip.core.datamodel;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     /// <summary>
     /// Control charachters used in message to divide message parts

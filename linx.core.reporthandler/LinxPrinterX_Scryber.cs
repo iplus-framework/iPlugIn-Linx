@@ -1,15 +1,14 @@
 using gip.core.autocomponent;
 using gip.core.datamodel;
 using gip.core.reporthandler;
-using gip.core.reporthandlerwpf.Flowdoc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
-    public partial class LinxPrinter
+    public partial class LinxPrinterX
     {
         protected override PrintJob TryCreateScryberCustomPrintJob(ACClassDesign aCClassDesign, ReportData reportData)
         {
@@ -23,12 +22,12 @@ namespace linx.core.reporthandlerwpf
             try
             {
                 Encoding encoding = ResolveEncoding();
-                LinxScryberLayoutRenderer renderer = new LinxScryberLayoutRenderer(encoding);
+                LinxScryberLayoutRendererX renderer = new LinxScryberLayoutRendererX(encoding);
                 byte[] payload = ScryberReportEngine.RenderWithLayoutRenderer(template, reportData, renderer);
                 if ((payload == null || payload.Length == 0) && (renderer.Lines == null || renderer.Lines.Count == 0))
                     return null;
 
-                LinxScryberPrintJob linxPrintJob = new LinxScryberPrintJob
+                LinxPrintJobX linxPrintJob = new LinxPrintJobX
                 {
                     Name = aCClassDesign.ACIdentifier,
                     Encoding = encoding,
@@ -56,9 +55,10 @@ namespace linx.core.reporthandlerwpf
             }
         }
 
-        private void BuildScryberRemoteJob(LinxScryberPrintJob linxPrintJob, LinxScryberLayoutRenderer renderer, Encoding encoding, byte[] payload)
+
+        private void BuildScryberRemoteJob(LinxPrintJobX linxPrintJob, LinxScryberLayoutRendererX renderer, Encoding encoding, byte[] payload)
         {
-            AddPrintMessageToJob(linxPrintJob, null);
+            AddPrintMessageToJob(linxPrintJob);
 
             List<string> lines = GetScryberTextLines(renderer, encoding, payload);
             if (lines.Count == 0)
@@ -76,26 +76,26 @@ namespace linx.core.reporthandlerwpf
             byte[] inputData = LinxHelper.Combine(dataArr);
 
             byte[] data = GetData(LinxASCIControlCharacterEnum.GS, inputData);
-            linxPrintJob.PacketsForPrint.Add(new LinxPrintJob.Telegram(LinxPrintJobTypeEnum.PrintRemote, data));
+            linxPrintJob.PacketsForPrint.Add(new Telegram(LinxPrintJobTypeEnum.PrintRemote, data));
 
             AddPrintCommandToJob(linxPrintJob);
         }
 
-        private void BuildScryberDirectJob(LinxScryberPrintJob linxPrintJob, LinxScryberLayoutRenderer renderer, Encoding encoding, byte[] payload)
+        private void BuildScryberDirectJob(LinxPrintJobX linxPrintJob, LinxScryberLayoutRendererX renderer, Encoding encoding, byte[] payload)
         {
-            AddDeleteReportToJob(linxPrintJob, null);
+            AddDeleteReportToJob(linxPrintJob);
 
-            List<LinxScryberRenderedLine> lines = renderer.Lines?.ToList() ?? new List<LinxScryberRenderedLine>();
+            List<LinxScryberRenderedLineX> lines = renderer.Lines?.ToList() ?? new List<LinxScryberRenderedLineX>();
             if (lines.Count == 0)
             {
                 foreach (string text in GetScryberTextLines(renderer, encoding, payload))
                 {
-                    lines.Add(new LinxScryberRenderedLine { Text = text, XPos = 0, YPos = 0, AggregateGroup = null });
+                    lines.Add(new LinxScryberRenderedLineX { Text = text, XPos = 0, YPos = 0, AggregateGroup = null });
                 }
             }
 
-            int fallbackY = 0;
-            foreach (LinxScryberRenderedLine line in lines)
+            //int fallbackY = 0;
+            foreach (LinxScryberRenderedLineX line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line?.Text))
                     continue;
@@ -103,18 +103,21 @@ namespace linx.core.reporthandlerwpf
                 string aggregateGroup = ResolveAggregateGroup(line.AggregateGroup);
                 LinxDataSetData dataSet = ResolveDataSet(aggregateGroup);
 
-                InlineContextValue inline = new InlineContextValue
-                {
-                    AggregateGroup = aggregateGroup,
-                    XPos = Math.Max(0, line.XPos),
-                    YPos = line.YPos > 0 ? line.YPos : fallbackY,
-                    Text = line.Text,
-                };
+                /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
+                /// because this fields of InlinePropertyValueBase are necessary:
+                ///        characterWidth = inlineProp.CustomInt01;
+                ///        interCharacterSpace = inlineProp.CustomInt02;
+                // InlineContextValue inline = new InlineContextValue
+                // {
+                //     AggregateGroup = aggregateGroup,
+                //     XPos = Math.Max(0, line.XPos),
+                //     YPos = line.YPos > 0 ? line.YPos : fallbackY,
+                //     Text = line.Text,
+                // };
+                // AddTextValueToPrintMessage(linxPrintJob, inline, aggregateGroup, line.Text);
 
-                AddTextValueToPrintMessage(linxPrintJob, inline, aggregateGroup, line.Text);
-
-                int lineStep = Math.Max(1, dataSet?.Height ?? 10);
-                fallbackY = inline.YPos + lineStep;
+                //int lineStep = Math.Max(1, dataSet?.Height ?? 10);
+                //fallbackY = inline.YPos + lineStep;
             }
 
             int msgLengthInBytes = linxPrintJob.LinxFields.Sum(c => BitConverter.ToInt16(c.Header.FieldLengthInBytes, 0)) + LinxMessageHeader.DefaultHeaderLength;
@@ -134,13 +137,13 @@ namespace linx.core.reporthandlerwpf
             downloadData.AddRange(fieldData);
 
             byte[] data = GetData(LinxASCIControlCharacterEnum.EM, downloadData.ToArray().SelectMany(c => c).ToArray());
-            linxPrintJob.PacketsForPrint.Add(new LinxPrintJob.Telegram(LinxPrintJobTypeEnum.DownloadReport, data));
+            linxPrintJob.PacketsForPrint.Add(new Telegram(LinxPrintJobTypeEnum.DownloadReport, data));
 
-            AddPrintMessageToJob(linxPrintJob, null);
+            AddPrintMessageToJob(linxPrintJob);
             AddPrintCommandToJob(linxPrintJob);
         }
 
-        private List<string> GetScryberTextLines(LinxScryberLayoutRenderer renderer, Encoding encoding, byte[] payload)
+        private List<string> GetScryberTextLines(LinxScryberLayoutRendererX renderer, Encoding encoding, byte[] payload)
         {
             List<string> lines = renderer.Lines?
                 .Select(c => c?.Text?.Trim())
@@ -196,7 +199,7 @@ namespace linx.core.reporthandlerwpf
             }
         }
 
-        private static void ApplyScryberJobMetadata(LinxScryberPrintJob linxPrintJob, LinxScryberJobMetadata metadata)
+        private static void ApplyScryberJobMetadata(LinxPrintJobX linxPrintJob, LinxScryberJobMetadataX metadata)
         {
             if (linxPrintJob == null || metadata == null)
                 return;

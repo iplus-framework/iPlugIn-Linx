@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Documents;
+using linx.core.reporthandler;
 
 namespace linx.core.reporthandlerwpf
 {
@@ -49,7 +50,7 @@ namespace linx.core.reporthandlerwpf
                 downloadData.AddRange(fieldData);
 
                 byte[] data = GetData(LinxASCIControlCharacterEnum.EM, downloadData.ToArray().SelectMany(c => c).ToArray());
-                linxPrintJob.PacketsForPrint.Add(new LinxPrintJob.Telegram(LinxPrintJobTypeEnum.DownloadReport, data));
+                linxPrintJob.PacketsForPrint.Add(new Telegram(LinxPrintJobTypeEnum.DownloadReport, data));
             }
 
             AddPrintMessageToJob(linxPrintJob, flowDoc);
@@ -67,7 +68,7 @@ namespace linx.core.reporthandlerwpf
 
                 // generate request array and add to queue
                 byte[] data = GetData(LinxASCIControlCharacterEnum.GS, inputData);
-                linxPrintJob.PacketsForPrint.Add(new LinxPrintJob.Telegram(LinxPrintJobTypeEnum.PrintRemote, data));
+                linxPrintJob.PacketsForPrint.Add(new Telegram(LinxPrintJobTypeEnum.PrintRemote, data));
             }
 
             AddPrintCommandToJob(linxPrintJob);

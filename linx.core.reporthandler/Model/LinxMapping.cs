@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     public class LinxMapping<T> where T : class
     {

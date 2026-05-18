@@ -1,6 +1,6 @@
 ﻿using gip.core.datamodel;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     /// <summary>
     /// Return value for printer state

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     public class LinxMessageHeader
     {

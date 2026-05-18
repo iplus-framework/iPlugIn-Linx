@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace linx.core.reporthandlerwpf
+namespace linx.core.reporthandler
 {
     /// <summary>
     /// Helper class for build linx messages

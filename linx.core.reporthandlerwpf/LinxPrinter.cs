@@ -3,19 +3,21 @@ using gip.core.datamodel;
 using gip.core.reporthandlerwpf;
 using System.Threading;
 using System.Threading.Tasks;
+using linx.core.reporthandler;
 
 namespace linx.core.reporthandlerwpf
 {
     [ACClassInfo(Const.PackName_VarioSystem, "en{'LinxPrinter'}de{'LinxPrinter'}", Global.ACKinds.TPABGModule, Global.ACStorableTypes.Required, false, false)]
-    public partial class LinxPrinter : ACPrintServerBaseWPF
+    public partial class LinxPrinter : ACPrintServerBaseWPF, ILinxPrinter
     {
         private ACPropertyConfigValue<bool> _UseScryberLayoutRenderer;
+        private LinxPrinterXShared _shared;
 
         #region ctor's
         public LinxPrinter(ACClass acType, IACObject content, IACObject parentACObject, ACValueList parameter, string acIdentifier = "")
            : base(acType, content, parentACObject, parameter, acIdentifier)
         {
-            _UseScryberLayoutRenderer = new ACPropertyConfigValue<bool>(this, nameof(UseScryberLayoutRenderer), true);
+            _shared = new LinxPrinterXShared(this);
         }
 
         public override bool ACInit(Global.ACStartTypes startChildMode = Global.ACStartTypes.Automatic)
@@ -24,9 +26,7 @@ namespace linx.core.reporthandlerwpf
                 return false;
 
             _ = IPAddress;
-            _ = UseScryberLayoutRenderer;
-
-            DataSets = LoadDataSets();
+            _shared.ACInit(startChildMode);
 
             return true;
         }
@@ -35,14 +35,7 @@ namespace linx.core.reporthandlerwpf
         public override bool ACPostInit()
         {
             bool basePostInit = base.ACPostInit();
-
-
-            _ShutdownEvent = new ManualResetEvent(false);
-            _PollThread = new ACThread(Poll);
-            _PollThread.Name = "ACUrl:" + this.GetACUrl() + ";Poll();";
-            //_PollThread.ApartmentState = ApartmentState.STA;
-            _PollThread.Start();
-
+            _shared.ACPostInit();
             return basePostInit;
         }
 
@@ -50,16 +43,7 @@ namespace linx.core.reporthandlerwpf
         public override async Task<bool> ACDeInit(bool deleteACClassTask = false)
         {
             bool acDeinit = await base.ACDeInit(deleteACClassTask);
-
-            if (_PollThread != null)
-            {
-                if (_ShutdownEvent != null && _ShutdownEvent.SafeWaitHandle != null && !_ShutdownEvent.SafeWaitHandle.IsClosed)
-                    _ShutdownEvent.Set();
-                if (!_PollThread.Join(5000))
-                    _PollThread.Abort();
-                _PollThread = null;
-            }
-
+            _shared.ACDeInit(deleteACClassTask);
             return acDeinit;
         }
 
@@ -70,19 +54,9 @@ namespace linx.core.reporthandlerwpf
         [ACPropertyInfo(true, 200, DefaultValue = false)]
         public bool UseRemoteReport { get; set; }
 
-        [ACPropertyConfig("en{'Use Scryber layout renderer'}de{'Scryber-Layout-Renderer verwenden'}")]
-        public bool UseScryberLayoutRenderer
-        {
-            get => _UseScryberLayoutRenderer.ValueT;
-            set => _UseScryberLayoutRenderer.ValueT = value;
-        }
-
         #endregion
 
         #region Broadcast-Properties
-
-        [ACPropertyBindingSource(9999, "Error", "en{'Linx printer alarm'}de{'Linx Drucker Alarm'}", "", false, false)]
-        public IACContainerTNet<PANotifyState> LinxPrinterAlarm { get; set; }
 
         [ACPropertyBindingSource(730, "Error", "en{'Printer (complete) status'}de{'Druckerstatus (abgeschlossen).'}", "", false, false)]
         public IACContainerTNet<LinxPrinterCompleteStatusResponse> PrinterCompleteStatus
