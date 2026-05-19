@@ -17,16 +17,17 @@ namespace linx.core.reporthandler
     /// </summary>
     public sealed class LinxScryberLayoutRendererX : IDocumentLayoutRenderer
     {
-        private readonly Encoding _encoding;
         private readonly List<LinxScryberRenderedLineX> _lines = new List<LinxScryberRenderedLineX>();
         private LinxScryberJobMetadataX _jobMetadata = new LinxScryberJobMetadataX();
+        private string _defaultAggregateGroup;
 
         public IReadOnlyList<LinxScryberRenderedLineX> Lines => _lines;
         public LinxScryberJobMetadataX JobMetadata => _jobMetadata;
 
-        public LinxScryberLayoutRendererX(Encoding encoding)
+        public LinxScryberLayoutRendererX(Encoding encoding, bool writePayload = true)
         {
-            _encoding = encoding ?? Encoding.ASCII;
+            _ = encoding;
+            _ = writePayload;
         }
 
         public void Render(ScryberDocument document, PDFLayoutDocument layout, PDFLayoutContext layoutContext, Stream output)
@@ -38,25 +39,18 @@ namespace linx.core.reporthandler
 
             _lines.Clear();
             _jobMetadata = ExtractJobMetadata(document);
+            _defaultAggregateGroup = _jobMetadata.DefaultAggregateGroup;
 
-            using (MemoryStream buffer = new MemoryStream())
+            for (int i = 0; i < layout.AllPages.Count; i++)
             {
-                for (int i = 0; i < layout.AllPages.Count; i++)
-                {
-                    PDFLayoutPage page = layout.AllPages[i];
-                    if (page == null)
-                        continue;
+                PDFLayoutPage page = layout.AllPages[i];
+                if (page == null)
+                    continue;
 
-                    if (i > 0)
-                        WriteLineBreak(buffer);
-
-                    WriteBlock(buffer, page.HeaderBlock);
-                    WriteBlock(buffer, page.ContentBlock);
-                    WriteBlock(buffer, page.FooterBlock);
-                }
-
-                buffer.Position = 0;
-                buffer.CopyTo(output);
+                // Extraction only: Linx telegram packets are composed later in LinxPrinterX.
+                WriteBlock(Stream.Null, page.HeaderBlock);
+                WriteBlock(Stream.Null, page.ContentBlock);
+                WriteBlock(Stream.Null, page.FooterBlock);
             }
         }
 
@@ -107,14 +101,10 @@ namespace linx.core.reporthandler
                     continue;
 
                 _lines.Add(rendered);
-
-                byte[] bytes = _encoding.GetBytes(rendered.Text.TrimEnd());
-                output.Write(bytes, 0, bytes.Length);
-                WriteLineBreak(output);
             }
         }
 
-        private static List<LinxScryberRenderedLineX> ExtractRenderedLines(PDFLayoutLine line)
+        private List<LinxScryberRenderedLineX> ExtractRenderedLines(PDFLayoutLine line)
         {
             List<LinxScryberRenderedLineX> results = new List<LinxScryberRenderedLineX>();
 
@@ -131,6 +121,8 @@ namespace linx.core.reporthandler
                     continue;
 
                 string runGroup = ExtractAggregateGroup(run);
+                if (string.IsNullOrWhiteSpace(runGroup))
+                    runGroup = _defaultAggregateGroup;
 
                 if (builder.Length == 0)
                 {
@@ -178,29 +170,80 @@ namespace linx.core.reporthandler
 
         private static string ExtractAggregateGroup(PDFLayoutRun run)
         {
-            if (!(run?.Owner is Component component))
-                return null;
+            foreach (Component candidate in EnumerateCandidateComponents(run))
+            {
+                string group;
+                if (TryGetAggregateGroupFromComponent(candidate, out group))
+                    return group;
+            }
 
-            string metadataGroup;
-            if (TryGetComponentMetadata(component, "linx-aggregate-group", out metadataGroup) ||
-                TryGetComponentMetadata(component, "aggregate-group", out metadataGroup))
-                return metadataGroup;
+            return null;
+        }
+
+        private static bool TryGetAggregateGroupFromComponent(Component component, out string aggregateGroup)
+        {
+            aggregateGroup = null;
+            if (component == null)
+                return false;
+
+            if (TryGetComponentMetadata(component, "linx-aggregate-group", out aggregateGroup) ||
+                TryGetComponentMetadata(component, "aggregate-group", out aggregateGroup) ||
+                TryGetComponentMetadata(component, "data-linx-aggregate-group", out aggregateGroup) ||
+                TryGetComponentMetadata(component, "data-aggregate-group", out aggregateGroup) ||
+                TryGetComponentMetadata(component, "data-linx-aggregategroup", out aggregateGroup) ||
+                TryGetComponentMetadata(component, "data-aggregategroup", out aggregateGroup))
+                return true;
 
             string classes = component.StyleClass;
             if (string.IsNullOrWhiteSpace(classes))
-                return null;
+                return false;
 
             string[] tokens = classes.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
             string ag = tokens.FirstOrDefault(t => t.StartsWith("ag-", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(ag))
-                return DecodeAggregateGroupToken(ag.Substring(3));
+            {
+                aggregateGroup = DecodeAggregateGroupToken(ag.Substring(3));
+                return !string.IsNullOrWhiteSpace(aggregateGroup);
+            }
 
             string linxAg = tokens.FirstOrDefault(t => t.StartsWith("linx-ag-", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(linxAg))
-                return DecodeAggregateGroupToken(linxAg.Substring("linx-ag-".Length));
+            {
+                aggregateGroup = DecodeAggregateGroupToken(linxAg.Substring("linx-ag-".Length));
+                return !string.IsNullOrWhiteSpace(aggregateGroup);
+            }
 
-            return null;
+            return false;
+        }
+
+        private static IEnumerable<Component> EnumerateCandidateComponents(PDFLayoutRun run)
+        {
+            HashSet<Component> visited = new HashSet<Component>();
+
+            foreach (Component fromOwner in EnumerateParentChain(run?.Owner as Component, visited))
+                yield return fromOwner;
+
+            PDFLayoutItem current = run?.Parent;
+            while (current != null)
+            {
+                foreach (Component fromLayoutOwner in EnumerateParentChain(current.Owner as Component, visited))
+                    yield return fromLayoutOwner;
+
+                current = current.Parent;
+            }
+        }
+
+        private static IEnumerable<Component> EnumerateParentChain(Component start, HashSet<Component> visited)
+        {
+            Component current = start;
+            while (current != null)
+            {
+                if (visited.Add(current))
+                    yield return current;
+
+                current = current.Parent;
+            }
         }
 
         private static string DecodeAggregateGroupToken(string token)
@@ -334,20 +377,36 @@ namespace linx.core.reporthandler
             bool boolValue;
             string stringValue;
 
-            if (TryGetIntMetadata(component, out intValue, "linx-character-width", "character-width"))
+            if (TryGetIntMetadata(component, out intValue,
+                "linx-character-width", "character-width", "custom-int-01", "customint01", "customint1",
+                "data-linx-character-width", "data-character-width", "data-custom-int-01", "data-customint01", "data-customint1"))
                 target.CharacterWidth = intValue;
 
-            if (TryGetIntMetadata(component, out intValue, "linx-inter-char-space", "inter-char-space"))
+            if (TryGetIntMetadata(component, out intValue,
+                "linx-inter-char-space", "inter-char-space", "custom-int-02", "customint02", "customint2",
+                "data-linx-inter-char-space", "data-inter-char-space", "data-custom-int-02", "data-customint02", "data-customint2"))
                 target.InterCharSpace = intValue;
 
-            if (TryGetIntMetadata(component, out intValue, "linx-field-height-drop", "field-height-drop"))
+            if (TryGetIntMetadata(component, out intValue,
+                "linx-field-height-drop", "field-height-drop", "custom-int-03", "customint03", "customint3",
+                "data-linx-field-height-drop", "data-field-height-drop", "data-custom-int-03", "data-customint03", "data-customint3"))
                 target.FieldHeightDrop = intValue;
 
-            if (TryGetStringMetadata(component, out stringValue, "linx-raster-name", "raster-name"))
+            if (TryGetStringMetadata(component, out stringValue,
+                "linx-raster-name", "raster-name", "custom-01", "custom01",
+                "data-linx-raster-name", "data-raster-name", "data-custom-01", "data-custom01"))
                 target.RasterName = stringValue;
 
-            if (TryGetBoolMetadata(component, out boolValue, "linx-one-line", "one-line"))
+            if (TryGetBoolMetadata(component, out boolValue,
+                "linx-one-line", "one-line", "custom-02", "custom02",
+                "data-linx-one-line", "data-one-line", "data-custom-02", "data-custom02"))
                 target.IsOneLine = boolValue;
+
+            if (TryGetStringMetadata(component, out stringValue,
+                "linx-aggregate-group", "aggregate-group",
+                "data-linx-aggregate-group", "data-aggregate-group",
+                "data-linx-aggregategroup", "data-aggregategroup"))
+                target.DefaultAggregateGroup = stringValue;
         }
 
         private static void AddRenderedLine(List<LinxScryberRenderedLineX> results, string text, string aggregateGroup, int xPos, int yPos)
@@ -406,11 +465,6 @@ namespace linx.core.reporthandler
             return false;
         }
 
-        private static void WriteLineBreak(Stream output)
-        {
-            byte[] bytes = new byte[] { 0x0A };
-            output.Write(bytes, 0, bytes.Length);
-        }
     }
 
     public sealed class LinxScryberRenderedLineX
@@ -428,5 +482,6 @@ namespace linx.core.reporthandler
         public int? FieldHeightDrop { get; set; }
         public string RasterName { get; set; }
         public bool? IsOneLine { get; set; }
+        public string DefaultAggregateGroup { get; set; }
     }
 }

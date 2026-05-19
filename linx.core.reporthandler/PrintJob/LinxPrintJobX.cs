@@ -35,14 +35,15 @@ namespace linx.core.reporthandler
     {
 
         private string _rasterNameOverride;
-        private int _characterWidthOverride;
+        private int _characterWidthOverride = -1;
         private bool _isOneLineOverride;
-        private int _interCharSpaceOverride;
-        private int _fieldHeightDropOverride;
+        private int _interCharSpaceOverride = -1;
+        private int _fieldHeightDropOverride = -1;
 
         #region ctor's
         public LinxPrintJobX()
         {
+            _rasterNameOverride = "16 GEN STD";
         }
 
 
@@ -198,5 +199,19 @@ namespace linx.core.reporthandler
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Portable field options used by Scryber-driven LINX rendering in the core project.
+    /// Mirrors the subset of metadata previously sourced from InlinePropertyValueBase.
+    /// </summary>
+    public sealed class LinxFieldRenderOptionsX
+    {
+        public string AggregateGroup { get; set; }
+        public int XPos { get; set; }
+        public int YPos { get; set; }
+        public int CustomInt01 { get; set; } = -1;
+        public int CustomInt02 { get; set; } = -1;
+        public int CustomInt03 { get; set; } = -1;
     }
 }

@@ -128,67 +128,23 @@ namespace linx.core.reporthandler
 
 
         /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// because this fields of InlinePropertyValueBase are necessary:
-        ///        characterWidth = inlineProp.CustomInt01;
-        ///        interCharacterSpace = inlineProp.CustomInt02;
-        /// add to print queue
-        /// text data
-        /// DownloadTextValue == sending text to printer -> printer downloads text
+        /// Adds one text field to a direct LINX download message.
         /// </summary>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="text"></param>
-        // private void AddTextValueToPrintMessage(ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, string aggregateGroup, string text)
-        // {
-        //     /*
-        //         19	;Command ID - Download Message
-        //         01	;Number of messages
-        //         4E 00	;Message length in bytes
-        //         17 00	;Message length in rasters
-        //         06	;EHT setting
-        //         00 00	;Inter-raster width
-        //         10 00	;Print Delay
-        //         6D 65 73 73 61 67 65 31	;Message name - message1.pat
-        //         2E 70 61 74 00 00 00 00
-        //         31 36 20 47 45 4E 20 53	;Raster name - 16 GEN STD
-        //         54 44 00 00 00 00 00 00
-        //         1C	;Field header
-        //         00	;Field type – Text field
-        //         25 00	;Field length in bytes
-        //         00	;Y position
-        //         00 00	;X position
-        //         17 00	;Field length in rasters
-        //         07	;Field height in drops
-        //         00	;Format 3
-        //         01	;Bold multiplier
- 
-        //         04	;String length (excluding null)
-        //         00	;Format 1 – set to null
-        //         00	;Format 2
-        //         00	;Linkage
-        //         37 20 48 69 67 68 20 46	;Data set name - 7 High Full
-        //         75 6C 6C 00 00 00 00 00
-        //         4C 69 6E 78 00	;Data - Linx (note the null terminator)
+        public void AddTextValueToPrintMessage(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, string aggregateGroup, string text)
+        {
+            if (linxPrintJob == null || string.IsNullOrWhiteSpace(text))
+                return;
 
+            LinxDataSetData dataSet = PrintServer.DataSets?.FirstOrDefault(c =>
+                string.Equals(c.DataSetName, aggregateGroup, StringComparison.OrdinalIgnoreCase));
 
+            if (dataSet == null)
+                dataSet = PrintServer.DataSets?.FirstOrDefault();
 
-        //         Printer Reply:
-        //         1B 06	;ESC ACK sequence
-        //         00	;P-Status - No printer errors
-        //         00	;C-Status - No command errors
-        //         19	;Command ID sent
-        //         1B 03	;ESC ETX sequence
-        //         DE	;Checksum
-
-        //     */
-        //     LinxDataSetData dataSet = PrintServer.DataSets.Where(c => c.DataSetName == aggregateGroup).FirstOrDefault();
-        //     if (dataSet == null)
-        //     {
-        //         dataSet = PrintServer.DataSets.FirstOrDefault();
-        //     }
-        //     LinxField linxField = GetLinxField(linxPrintJob.Encoding, linxPrintJob, inlineProp, dataSet, text);
-        //     linxPrintJob.LinxFields.Add(linxField);
-        // }
+            LinxField linxField = GetLinxField(linxPrintJob.Encoding, linxPrintJob, fieldOptions, dataSet, text);
+            if (linxField != null)
+                linxPrintJob.LinxFields.Add(linxField);
+        }
 
 
         /// <summary>
@@ -264,63 +220,54 @@ namespace linx.core.reporthandler
 
         #region Build Objects
 
-        /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        /// <param name="encoding"></param>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="inlineProp"></param>
-        /// <param name="dataSet"></param>
-        /// <param name="value"></param>
-        /// <param name="fieldType"></param>
-        /// <returns></returns>
-        // public virtual LinxField GetLinxField(Encoding encoding, ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSet, string value, byte fieldType = 0x00)
-        // {
-        //     LinxField field = new LinxField();
-        //     byte[] tmp = encoding.GetBytes(value);
-        //     byte[] valueByte = new byte[tmp.Length + 1];
-        //     Array.Copy(tmp, valueByte, tmp.Length);
-        //     field.ValueByte = valueByte;
-        //     field.Header = GetLinxFieldHeader(dataSet, linxPrintJob, inlineProp, (short)value.Length, (short)field.ValueByte.Length, fieldType);
-        //     field.Value = value;
-        //     return field;
-        // }
+        public virtual LinxField GetLinxField(Encoding encoding, ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, LinxDataSetData dataSet, string value, byte fieldType = 0x00)
+        {
+            if (string.IsNullOrWhiteSpace(value) || linxPrintJob == null)
+                return null;
+
+            LinxField field = new LinxField();
+            Encoding encoder = encoding ?? linxPrintJob.Encoding ?? Encoding.ASCII;
+            byte[] tmp = encoder.GetBytes(value);
+            byte[] valueByte = new byte[tmp.Length + 1];
+            Array.Copy(tmp, valueByte, tmp.Length);
+            field.ValueByte = valueByte;
+            field.Header = GetLinxFieldHeader(dataSet, linxPrintJob, fieldOptions, (short)value.Length, (short)field.ValueByte.Length, fieldType);
+            field.Value = value;
+            return field;
+        }
     
     
-        /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        /// <param name="dataSet"></param>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="inlineProp"></param>
-        /// <param name="valueLength"></param>
-        /// <param name="valueByteLength"></param>
-        /// <param name="fieldType"></param>
-        /// <returns></returns>
-        // public virtual LinxFieldHeader GetLinxFieldHeader(LinxDataSetData dataSet, ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, short valueLength, short valueByteLength, byte fieldType = 0x00)
-        // {
-        //     LinxFieldHeader linxFieldHeader = new LinxFieldHeader();
-        //     linxFieldHeader.FieldType = fieldType;
+        public virtual LinxFieldHeader GetLinxFieldHeader(LinxDataSetData dataSet, ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, short valueLength, short valueByteLength, byte fieldType = 0x00)
+        {
+            LinxFieldHeader linxFieldHeader = new LinxFieldHeader();
+            linxFieldHeader.FieldType = fieldType;
 
-        //     byte[] fieldLengthInBytes = BitConverter.GetBytes(valueByteLength + LinxFieldHeader.ConstHeaderLength);
-        //     Array.Copy(fieldLengthInBytes, linxFieldHeader.FieldLengthInBytes, System.Math.Min(linxFieldHeader.FieldLengthInBytes.Length, fieldLengthInBytes.Length));
+            byte[] fieldLengthInBytes = BitConverter.GetBytes(valueByteLength + LinxFieldHeader.ConstHeaderLength);
+            Array.Copy(fieldLengthInBytes, linxFieldHeader.FieldLengthInBytes, System.Math.Min(linxFieldHeader.FieldLengthInBytes.Length, fieldLengthInBytes.Length));
 
-        //     byte[] fieldLengthInRasters = GetFieldLengthInRasters(linxPrintJob, inlineProp, dataSet, valueLength);
-        //     Array.Copy(fieldLengthInRasters, linxFieldHeader.FieldLengthInRasters, System.Math.Min(linxFieldHeader.FieldLengthInRasters.Length, fieldLengthInRasters.Length));
+            byte[] fieldLengthInRasters = GetFieldLengthInRasters(linxPrintJob, fieldOptions, dataSet, valueLength);
+            Array.Copy(fieldLengthInRasters, linxFieldHeader.FieldLengthInRasters, System.Math.Min(linxFieldHeader.FieldLengthInRasters.Length, fieldLengthInRasters.Length));
 
-        //     linxFieldHeader.TextLength = (byte)valueLength;
-        //     linxFieldHeader.FieldHeightInDrops = GetFieldHeightInDrops(linxPrintJob, inlineProp, dataSet, valueLength);
+            linxFieldHeader.TextLength = (byte)valueLength;
+            linxFieldHeader.FieldHeightInDrops = GetFieldHeightInDrops(linxPrintJob, fieldOptions, dataSet, valueLength);
 
-        //     byte[] xpos = BitConverter.GetBytes(inlineProp.XPos);
-        //     Array.Copy(xpos, linxFieldHeader.XPosition, System.Math.Min(linxFieldHeader.XPosition.Length, xpos.Length));
-        //     linxFieldHeader.YPosition = BitConverter.GetBytes(inlineProp.YPos)[0];
+            int xPos = Math.Max(0, fieldOptions?.XPos ?? 0);
+            int yPos = Math.Max(0, fieldOptions?.YPos ?? 0);
 
-        //     // Data set name	15 bytes + null*
-        //     Array.Copy(Encoding.ASCII.GetBytes(dataSet.DataSetName), linxFieldHeader.DataSetName, System.Math.Min(linxFieldHeader.DataSetName.Length - 1, dataSet.DataSetName.Length));
-        //     linxFieldHeader.DataSetName[15] = 0x00;
+            byte[] xpos = BitConverter.GetBytes((short)Math.Min(short.MaxValue, xPos));
+            Array.Copy(xpos, linxFieldHeader.XPosition, System.Math.Min(linxFieldHeader.XPosition.Length, xpos.Length));
+            linxFieldHeader.YPosition = (byte)Math.Min(byte.MaxValue, yPos);
 
-        //     return linxFieldHeader;
-        // }
+            string dataSetName = dataSet?.DataSetName
+                ?? PrintServer.DataSets?.FirstOrDefault()?.DataSetName
+                ?? string.Empty;
+
+            byte[] dataSetNameBytes = Encoding.ASCII.GetBytes(dataSetName);
+            Array.Copy(dataSetNameBytes, linxFieldHeader.DataSetName, System.Math.Min(linxFieldHeader.DataSetName.Length - 1, dataSetNameBytes.Length));
+            linxFieldHeader.DataSetName[15] = 0x00;
+
+            return linxFieldHeader;
+        }
 
         public LinxMessageHeader GetLinxMessageHeader(string messageName, string rasterName, short numOfMessages, short msgLengthInBytes, short msgLengthInRasters)
         {
@@ -419,63 +366,58 @@ namespace linx.core.reporthandler
             };
         }
 
-        /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="inlineProp"></param>
-        /// <param name="dataSetData"></param>
-        /// <param name="numberOfCharacters"></param>
-        /// <returns></returns>
-        // public virtual byte[] GetFieldLengthInRasters(ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSetData, short numberOfCharacters)
-        // {
-        //     // CustomInt01 = character width
-        //     // CustomInt02 = InterCharacterSpace
-        //     int interCharacterSpace = -1;
-        //     int characterWidth = -1;
-        //     if (inlineProp.CustomInt01 > 0 && inlineProp.CustomInt02 > 0)
-        //     {
-        //         characterWidth = inlineProp.CustomInt01;
-        //         interCharacterSpace = inlineProp.CustomInt02;
-        //     }
-        //     if (interCharacterSpace <= -1 || characterWidth <= -1)
-        //     {
-        //         characterWidth = linxPrintJob.CharacterWidth;
-        //         interCharacterSpace = linxPrintJob.InterCharSpace;
-        //     }
-        //     if ((interCharacterSpace <= -1 || characterWidth <= -1) && dataSetData != null)
-        //     {
-        //         characterWidth = dataSetData.Width;
-        //         interCharacterSpace = dataSetData.InterCharacterSpace;
-        //     }
-        //     if (interCharacterSpace <= -1 || characterWidth <= -1)
-        //     {
-        //         characterWidth = 5;
-        //         interCharacterSpace = 1;
-        //     }
+        public virtual byte[] GetFieldLengthInRasters(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, LinxDataSetData dataSetData, short numberOfCharacters)
+        {
+            int interCharacterSpace = -1;
+            int characterWidth = -1;
 
-        //     // field length in rasters can be calculated by multiplying the number of characters in the field by the width of the character in rasters (including the inter-character space), minus one inter-character space.
-        //     int length = (numberOfCharacters * (characterWidth + interCharacterSpace)) - interCharacterSpace;
-        //     return BitConverter.GetBytes((short)length);
-        // }
+            if (fieldOptions != null && fieldOptions.CustomInt01 > 0 && fieldOptions.CustomInt02 > 0)
+            {
+                characterWidth = fieldOptions.CustomInt01;
+                interCharacterSpace = fieldOptions.CustomInt02;
+            }
+
+            if ((interCharacterSpace <= -1 || characterWidth <= -1) && linxPrintJob != null)
+            {
+                characterWidth = linxPrintJob.CharacterWidth;
+                interCharacterSpace = linxPrintJob.InterCharSpace;
+            }
+
+            if ((interCharacterSpace <= -1 || characterWidth <= -1) && dataSetData != null)
+            {
+                characterWidth = dataSetData.Width;
+                interCharacterSpace = dataSetData.InterCharacterSpace;
+            }
+
+            if (interCharacterSpace <= -1 || characterWidth <= -1)
+            {
+                characterWidth = 5;
+                interCharacterSpace = 1;
+            }
+
+            int length = (numberOfCharacters * (characterWidth + interCharacterSpace)) - interCharacterSpace;
+            return BitConverter.GetBytes((short)length);
+        }
 
  
-        /// <summary>       
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        // public byte GetFieldHeightInDrops(ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSetData, short numberOfCharacters)
-        // {
-        //     int height = -1;
-        //     if (inlineProp.CustomInt03 > 0)
-        //         height = inlineProp.CustomInt03;
-        //     if (height <= -1)
-        //         height = linxPrintJob.FieldHeightDrop;
-        //     if (height <= -1 && dataSetData != null)
-        //         height = dataSetData.Height;
-        //     if (height <= -1)
-        //         height = 5;
-        //     return (byte)height;
-        // }
+        public byte GetFieldHeightInDrops(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, LinxDataSetData dataSetData, short numberOfCharacters)
+        {
+            int height = -1;
+
+            if (fieldOptions != null && fieldOptions.CustomInt03 > 0)
+                height = fieldOptions.CustomInt03;
+
+            if (height <= -1 && linxPrintJob != null)
+                height = linxPrintJob.FieldHeightDrop;
+
+            if (height <= -1 && dataSetData != null)
+                height = dataSetData.Height;
+
+            if (height <= -1)
+                height = 5;
+
+            return (byte)Math.Min(byte.MaxValue, Math.Max(0, height));
+        }
         #endregion
 
         #region Binary Serialization

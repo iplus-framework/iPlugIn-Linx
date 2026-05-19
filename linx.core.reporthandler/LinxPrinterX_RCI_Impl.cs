@@ -80,17 +80,12 @@ namespace linx.core.reporthandler
 
 
         /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// add to print queue
-        /// text data
-        /// DownloadTextValue == sending text to printer -> printer downloads text
+        /// Add one text field to a direct LINX message payload.
         /// </summary>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="text"></param>
-        // private void AddTextValueToPrintMessage(ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, string aggregateGroup, string text)
-        // {
-        //     _shared.AddTextValueToPrintMessage(linxPrintJob, inlineProp, aggregateGroup, text);
-        // }
+        private void AddTextValueToPrintMessage(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, string aggregateGroup, string text)
+        {
+            _shared.AddTextValueToPrintMessage(linxPrintJob, fieldOptions, aggregateGroup, text);
+        }
 
 
         /// <summary>
@@ -108,35 +103,15 @@ namespace linx.core.reporthandler
 
         #region Build Objects
 
-        /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        /// <param name="encoding"></param>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="inlineProp"></param>
-        /// <param name="dataSet"></param>
-        /// <param name="value"></param>
-        /// <param name="fieldType"></param>
-        /// <returns></returns>
-        // public virtual LinxField GetLinxField(Encoding encoding, ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSet, string value, byte fieldType = 0x00)
-        // {
-        //     return _shared.GetLinxField(encoding, linxPrintJob, inlineProp, dataSet, value, fieldType);
-        // }
+        public virtual LinxField GetLinxField(Encoding encoding, ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, LinxDataSetData dataSet, string value, byte fieldType = 0x00)
+        {
+            return _shared.GetLinxField(encoding, linxPrintJob, fieldOptions, dataSet, value, fieldType);
+        }
 
-        /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        /// <param name="dataSet"></param>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="inlineProp"></param>
-        /// <param name="valueLength"></param>
-        /// <param name="valueByteLength"></param>
-        /// <param name="fieldType"></param>
-        /// <returns></returns>
-        // public virtual LinxFieldHeader GetLinxFieldHeader(LinxDataSetData dataSet, ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, short valueLength, short valueByteLength, byte fieldType = 0x00)
-        // {
-        //     return _shared.GetLinxFieldHeader(dataSet, linxPrintJob, inlineProp, valueLength, valueByteLength, fieldType);
-        // }
+        public virtual LinxFieldHeader GetLinxFieldHeader(LinxDataSetData dataSet, ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, short valueLength, short valueByteLength, byte fieldType = 0x00)
+        {
+            return _shared.GetLinxFieldHeader(dataSet, linxPrintJob, fieldOptions, valueLength, valueByteLength, fieldType);
+        }
 
         public virtual LinxMessageHeader GetLinxMessageHeader(string messageName, string rasterName, short numOfMessages, short msgLengthInBytes, short msgLengthInRasters)
         {
@@ -151,26 +126,15 @@ namespace linx.core.reporthandler
             return _shared.LoadDataSets();
         }
 
-        /// <summary>
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        /// <param name="linxPrintJob"></param>
-        /// <param name="inlineProp"></param>
-        /// <param name="dataSetData"></param>
-        /// <param name="numberOfCharacters"></param>
-        /// <returns></returns>
-        // public virtual byte[] GetFieldLengthInRasters(ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSetData, short numberOfCharacters)
-        // {
-        //     return _shared.GetFieldLengthInRasters(linxPrintJob, inlineProp, dataSetData, numberOfCharacters);
-        // }
+        public virtual byte[] GetFieldLengthInRasters(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, LinxDataSetData dataSetData, short numberOfCharacters)
+        {
+            return _shared.GetFieldLengthInRasters(linxPrintJob, fieldOptions, dataSetData, numberOfCharacters);
+        }
 
-        /// <summary>       
-        /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-        /// </summary>
-        // public byte GetFieldHeightInDrops(ILinxPrintJob linxPrintJob, InlinePropertyValueBase inlineProp, LinxDataSetData dataSetData, short numberOfCharacters)
-        // {
-        //     return _shared.GetFieldHeightInDrops(linxPrintJob, inlineProp, dataSetData, numberOfCharacters);
-        // }
+        public byte GetFieldHeightInDrops(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, LinxDataSetData dataSetData, short numberOfCharacters)
+        {
+            return _shared.GetFieldHeightInDrops(linxPrintJob, fieldOptions, dataSetData, numberOfCharacters);
+        }
         #endregion
 
         #region Binary Serialization

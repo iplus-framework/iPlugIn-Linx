@@ -22,10 +22,12 @@ namespace linx.core.reporthandler
             try
             {
                 Encoding encoding = ResolveEncoding();
-                LinxScryberLayoutRendererX renderer = new LinxScryberLayoutRendererX(encoding);
-                byte[] payload = ScryberReportEngine.RenderWithLayoutRenderer(template, reportData, renderer);
-                if ((payload == null || payload.Length == 0) && (renderer.Lines == null || renderer.Lines.Count == 0))
+                LinxScryberLayoutRendererX renderer = new LinxScryberLayoutRendererX(encoding, writePayload: false);
+                _ = ScryberReportEngine.RenderWithLayoutRenderer(template, reportData, renderer);
+                if (renderer.Lines == null || renderer.Lines.Count == 0)
+                {
                     return null;
+                }
 
                 LinxPrintJobX linxPrintJob = new LinxPrintJobX
                 {
@@ -39,11 +41,11 @@ namespace linx.core.reporthandler
 
                 if (UseRemoteReport)
                 {
-                    BuildScryberRemoteJob(linxPrintJob, renderer, encoding, payload);
+                    BuildScryberRemoteJob(linxPrintJob, renderer);
                 }
                 else
                 {
-                    BuildScryberDirectJob(linxPrintJob, renderer, encoding, payload);
+                    BuildScryberDirectJob(linxPrintJob, renderer);
                 }
 
                 return linxPrintJob;
@@ -56,11 +58,11 @@ namespace linx.core.reporthandler
         }
 
 
-        private void BuildScryberRemoteJob(LinxPrintJobX linxPrintJob, LinxScryberLayoutRendererX renderer, Encoding encoding, byte[] payload)
+        private void BuildScryberRemoteJob(LinxPrintJobX linxPrintJob, LinxScryberLayoutRendererX renderer)
         {
             AddPrintMessageToJob(linxPrintJob);
 
-            List<string> lines = GetScryberTextLines(renderer, encoding, payload);
+            List<string> lines = GetScryberTextLines(renderer);
             if (lines.Count == 0)
                 lines.Add(string.Empty);
 
@@ -81,43 +83,36 @@ namespace linx.core.reporthandler
             AddPrintCommandToJob(linxPrintJob);
         }
 
-        private void BuildScryberDirectJob(LinxPrintJobX linxPrintJob, LinxScryberLayoutRendererX renderer, Encoding encoding, byte[] payload)
+        private void BuildScryberDirectJob(LinxPrintJobX linxPrintJob, LinxScryberLayoutRendererX renderer)
         {
             AddDeleteReportToJob(linxPrintJob);
 
             List<LinxScryberRenderedLineX> lines = renderer.Lines?.ToList() ?? new List<LinxScryberRenderedLineX>();
-            if (lines.Count == 0)
-            {
-                foreach (string text in GetScryberTextLines(renderer, encoding, payload))
-                {
-                    lines.Add(new LinxScryberRenderedLineX { Text = text, XPos = 0, YPos = 0, AggregateGroup = null });
-                }
-            }
+            string defaultAggregateGroup = renderer.JobMetadata?.DefaultAggregateGroup;
 
-            //int fallbackY = 0;
+            int fallbackY = 0;
             foreach (LinxScryberRenderedLineX line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line?.Text))
                     continue;
 
-                string aggregateGroup = ResolveAggregateGroup(line.AggregateGroup);
+                string aggregateGroup = ResolveAggregateGroup(line.AggregateGroup, defaultAggregateGroup);
                 LinxDataSetData dataSet = ResolveDataSet(aggregateGroup);
 
-                /// TODO for scryber (InlinePropertyValueBase doesn't exist in core reporthandler, only in wpf implementation) - need to find workaround for this
-                /// because this fields of InlinePropertyValueBase are necessary:
-                ///        characterWidth = inlineProp.CustomInt01;
-                ///        interCharacterSpace = inlineProp.CustomInt02;
-                // InlineContextValue inline = new InlineContextValue
-                // {
-                //     AggregateGroup = aggregateGroup,
-                //     XPos = Math.Max(0, line.XPos),
-                //     YPos = line.YPos > 0 ? line.YPos : fallbackY,
-                //     Text = line.Text,
-                // };
-                // AddTextValueToPrintMessage(linxPrintJob, inline, aggregateGroup, line.Text);
+                LinxFieldRenderOptionsX fieldOptions = new LinxFieldRenderOptionsX
+                {
+                    AggregateGroup = aggregateGroup,
+                    XPos = Math.Max(0, line.XPos),
+                    YPos = line.YPos > 0 ? line.YPos : fallbackY,
+                    CustomInt01 = linxPrintJob.CharacterWidth,
+                    CustomInt02 = linxPrintJob.InterCharSpace,
+                    CustomInt03 = linxPrintJob.FieldHeightDrop,
+                };
 
-                //int lineStep = Math.Max(1, dataSet?.Height ?? 10);
-                //fallbackY = inline.YPos + lineStep;
+                AddTextValueToPrintMessage(linxPrintJob, fieldOptions, aggregateGroup, line.Text);
+
+                int lineStep = Math.Max(1, dataSet?.Height ?? (fieldOptions.CustomInt03 > 0 ? fieldOptions.CustomInt03 : 10));
+                fallbackY = fieldOptions.YPos + lineStep;
             }
 
             int msgLengthInBytes = linxPrintJob.LinxFields.Sum(c => BitConverter.ToInt16(c.Header.FieldLengthInBytes, 0)) + LinxMessageHeader.DefaultHeaderLength;
@@ -143,31 +138,21 @@ namespace linx.core.reporthandler
             AddPrintCommandToJob(linxPrintJob);
         }
 
-        private List<string> GetScryberTextLines(LinxScryberLayoutRendererX renderer, Encoding encoding, byte[] payload)
+        private List<string> GetScryberTextLines(LinxScryberLayoutRendererX renderer)
         {
-            List<string> lines = renderer.Lines?
+            return renderer.Lines?
                 .Select(c => c?.Text?.Trim())
                 .Where(c => !string.IsNullOrWhiteSpace(c))
                 .ToList() ?? new List<string>();
-
-            if (lines.Count > 0)
-                return lines;
-
-            if (payload == null || payload.Length == 0)
-                return new List<string>();
-
-            string text = encoding.GetString(payload);
-            return text
-                .Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None)
-                .Select(c => c?.Trim())
-                .Where(c => !string.IsNullOrWhiteSpace(c))
-                .ToList();
         }
 
-        private string ResolveAggregateGroup(string aggregateGroup)
+        private string ResolveAggregateGroup(string aggregateGroup, string defaultAggregateGroup)
         {
             if (!string.IsNullOrWhiteSpace(aggregateGroup))
                 return aggregateGroup;
+
+            if (!string.IsNullOrWhiteSpace(defaultAggregateGroup))
+                return defaultAggregateGroup;
 
             LinxDataSetData first = DataSets?.FirstOrDefault();
             return first?.DataSetName;

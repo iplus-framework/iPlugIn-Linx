@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Documents;
 using linx.core.reporthandler;
+using System.IO;
 
 namespace linx.core.reporthandlerwpf
 {
@@ -68,15 +69,15 @@ namespace linx.core.reporthandlerwpf
 
                 if (linxPrintJob != null)
                 {
-                    //if (DumpToTempFolder)
-                    //{
-                    //    linxPrintJob.WriteTelegramsToFiles(Path.GetTempPath());
-                    //}
-                    //using (ACMonitor.Lock(_61000_LockPort))
-                    //{
-                    //    Messages.LogMessage(eMsgLevel.Info, GetACUrl(), nameof(SendDataToPrinter) + "(100)", $"Add LinxPrintJob:{linxPrintJob.PrintJobID} to queue...");
-                    //    LinxPrintJobs.Enqueue(linxPrintJob);
-                    //}
+                    if (DumpToTempFolder)
+                    {
+                       linxPrintJob.WriteTelegramsToFiles(Path.GetTempPath());
+                    }
+                    using (ACMonitor.Lock(_61000_LockPort))
+                    {
+                       Messages.LogMessage(eMsgLevel.Info, GetACUrl(), nameof(SendDataToPrinter) + "(100)", $"Add LinxPrintJob:{linxPrintJob.PrintJobID} to queue...");
+                       _shared.EnqueueJob(linxPrintJob, linxPrintJob.Name);
+                    }
                 }
             }
 
