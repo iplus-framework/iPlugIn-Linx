@@ -113,6 +113,7 @@ namespace linx.core.reporthandler
 
             StringBuilder builder = new StringBuilder();
             string currentGroup = null;
+            bool currentIsBarcode = false;
 
             foreach (PDFLayoutRun run in line.Runs)
             {
@@ -124,22 +125,27 @@ namespace linx.core.reporthandler
                 if (string.IsNullOrWhiteSpace(runGroup))
                     runGroup = _defaultAggregateGroup;
 
+                bool runIsBarcode = ExtractIsBarcode(run);
+
                 if (builder.Length == 0)
                 {
                     currentGroup = runGroup;
+                    currentIsBarcode = runIsBarcode;
                 }
-                else if (!string.Equals(currentGroup ?? string.Empty, runGroup ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+                else if (!string.Equals(currentGroup ?? string.Empty, runGroup ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                    || currentIsBarcode != runIsBarcode)
                 {
-                    AddRenderedLine(results, builder.ToString(), currentGroup, xPos, yPos);
+                    AddRenderedLine(results, builder.ToString(), currentGroup, currentIsBarcode, xPos, yPos);
                     builder.Clear();
                     currentGroup = runGroup;
+                    currentIsBarcode = runIsBarcode;
                 }
 
                 builder.Append(runText);
             }
 
             if (builder.Length > 0)
-                AddRenderedLine(results, builder.ToString(), currentGroup, xPos, yPos);
+                AddRenderedLine(results, builder.ToString(), currentGroup, currentIsBarcode, xPos, yPos);
 
             return results;
         }
@@ -180,6 +186,18 @@ namespace linx.core.reporthandler
             return null;
         }
 
+        private static bool ExtractIsBarcode(PDFLayoutRun run)
+        {
+            foreach (Component candidate in EnumerateCandidateComponents(run))
+            {
+                bool isBarcode;
+                if (TryGetBarcodeFromComponent(candidate, out isBarcode))
+                    return isBarcode;
+            }
+
+            return false;
+        }
+
         private static bool TryGetAggregateGroupFromComponent(Component component, out string aggregateGroup)
         {
             aggregateGroup = null;
@@ -215,6 +233,54 @@ namespace linx.core.reporthandler
             }
 
             return false;
+        }
+
+        private static bool TryGetBarcodeFromComponent(Component component, out bool isBarcode)
+        {
+            isBarcode = false;
+            if (component == null)
+                return false;
+
+            if (TryGetBoolMetadata(component, out isBarcode,
+                "linx-barcode", "barcode",
+                "data-linx-barcode", "data-barcode"))
+                return true;
+
+            string barcodeType;
+            if (TryGetStringMetadata(component, out barcodeType,
+                "linx-barcode-type", "barcode-type",
+                "zpl-barcode-type", "escpos-barcode-type",
+                "data-linx-barcode-type", "data-barcode-type",
+                "data-zpl-barcode-type", "data-escpos-barcode-type"))
+            {
+                isBarcode = !string.IsNullOrWhiteSpace(barcodeType);
+                return true;
+            }
+
+            string fieldType;
+            if (TryGetStringMetadata(component, out fieldType,
+                "linx-field-type", "field-type",
+                "data-linx-field-type", "data-field-type"))
+            {
+                isBarcode = string.Equals(fieldType, "barcode", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fieldType, "bar-code", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fieldType, "ean", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(fieldType, "code128", StringComparison.OrdinalIgnoreCase);
+                return true;
+            }
+
+            string classes = component.StyleClass;
+            if (string.IsNullOrWhiteSpace(classes))
+                return false;
+
+            string[] tokens = classes.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            isBarcode = tokens.Any(t =>
+                string.Equals(t, "barcode", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(t, "linx-barcode", StringComparison.OrdinalIgnoreCase)
+                || t.StartsWith("barcode-", StringComparison.OrdinalIgnoreCase)
+                || t.StartsWith("linx-barcode-", StringComparison.OrdinalIgnoreCase));
+
+            return isBarcode;
         }
 
         private static IEnumerable<Component> EnumerateCandidateComponents(PDFLayoutRun run)
@@ -409,7 +475,7 @@ namespace linx.core.reporthandler
                 target.DefaultAggregateGroup = stringValue;
         }
 
-        private static void AddRenderedLine(List<LinxScryberRenderedLineX> results, string text, string aggregateGroup, int xPos, int yPos)
+        private static void AddRenderedLine(List<LinxScryberRenderedLineX> results, string text, string aggregateGroup, bool isBarcode, int xPos, int yPos)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return;
@@ -426,6 +492,7 @@ namespace linx.core.reporthandler
             {
                 Text = trimmed,
                 AggregateGroup = aggregateGroup,
+                IsBarcode = isBarcode,
                 XPos = xPos,
                 YPos = yPos,
             });
@@ -471,6 +538,7 @@ namespace linx.core.reporthandler
     {
         public string Text { get; set; }
         public string AggregateGroup { get; set; }
+        public bool IsBarcode { get; set; }
         public int XPos { get; set; }
         public int YPos { get; set; }
     }

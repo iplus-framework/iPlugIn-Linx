@@ -155,7 +155,42 @@ namespace linx.core.reporthandler
         /// <param name="inlineBarcode"></param>
         public void AddBarcodeValueToPrintMessage(ILinxPrintJob linxPrintJob, string aggregateGroup, string barcodeValue)
         {
-            // TODO: @aagincic LinxPrinter DownloadBarcodeValue
+            AddBarcodeValueToPrintMessage(linxPrintJob, null, aggregateGroup, barcodeValue);
+        }
+
+
+        /// <summary>
+        /// Adds a barcode field pair (payload + barcode descriptor) to a direct LINX message.
+        /// </summary>
+        public void AddBarcodeValueToPrintMessage(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, string aggregateGroup, string barcodeValue)
+        {
+            if (linxPrintJob == null || string.IsNullOrWhiteSpace(barcodeValue))
+                return;
+
+            LinxDataSetData dataSet = PrintServer.DataSets?.FirstOrDefault(c =>
+                string.Equals(c.DataSetName, aggregateGroup, StringComparison.OrdinalIgnoreCase));
+
+            if (dataSet == null)
+                dataSet = PrintServer.DataSets?.FirstOrDefault();
+
+            // Hidden text field carries barcode payload and links to the following barcode field.
+            LinxField payloadField = GetLinxField(linxPrintJob.Encoding, linxPrintJob, fieldOptions, dataSet, barcodeValue, 0xC0);
+            if (payloadField != null)
+            {
+                payloadField.Header.Format2 = 0x00;
+                payloadField.Header.Linkage = 0x01;
+                linxPrintJob.LinxFields.Add(payloadField);
+            }
+
+            // Barcode field descriptor (with LINX defaults similar to existing protocol examples).
+            LinxField barcodeField = GetLinxField(linxPrintJob.Encoding, linxPrintJob, fieldOptions, dataSet, barcodeValue, 0x46);
+            if (barcodeField != null)
+            {
+                barcodeField.Header.BoldMultiplier = 0x04;
+                barcodeField.Header.Format2 = 0x03;
+                barcodeField.Header.Linkage = 0x00;
+                linxPrintJob.LinxFields.Add(barcodeField);
+            }
 
             /*
                 7C	;Command ID - Download Message Data

@@ -109,7 +109,10 @@ namespace linx.core.reporthandler
                     CustomInt03 = linxPrintJob.FieldHeightDrop,
                 };
 
-                AddTextValueToPrintMessage(linxPrintJob, fieldOptions, aggregateGroup, line.Text);
+                if (line.IsBarcode)
+                    AddBarcodeValueToPrintMessage(linxPrintJob, fieldOptions, aggregateGroup, line.Text);
+                else
+                    AddTextValueToPrintMessage(linxPrintJob, fieldOptions, aggregateGroup, line.Text);
 
                 int lineStep = Math.Max(1, dataSet?.Height ?? (fieldOptions.CustomInt03 > 0 ? fieldOptions.CustomInt03 : 10));
                 fallbackY = fieldOptions.YPos + lineStep;

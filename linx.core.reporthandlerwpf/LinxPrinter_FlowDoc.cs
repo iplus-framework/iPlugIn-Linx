@@ -238,7 +238,7 @@ namespace linx.core.reporthandlerwpf
             }
             else
             {
-                AddBarcodeValueToPrintMessage(linxPrintJob, inlineBarcode.AggregateGroup, barcodeValue);
+                AddBarcodeValueToPrintMessage(linxPrintJob, inlineBarcode, inlineBarcode.AggregateGroup, barcodeValue);
             }
         }
 

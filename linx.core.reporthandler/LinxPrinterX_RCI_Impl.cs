@@ -96,7 +96,16 @@ namespace linx.core.reporthandler
         /// <param name="inlineBarcode"></param>
         private void AddBarcodeValueToPrintMessage(ILinxPrintJob linxPrintJob, string aggregateGroup, string barcodeValue)
         {
-            _shared.AddBarcodeValueToPrintMessage(linxPrintJob, aggregateGroup, barcodeValue);
+            AddBarcodeValueToPrintMessage(linxPrintJob, null, aggregateGroup, barcodeValue);
+        }
+
+
+        /// <summary>
+        /// Adds a direct LINX barcode field with explicit render options.
+        /// </summary>
+        private void AddBarcodeValueToPrintMessage(ILinxPrintJob linxPrintJob, LinxFieldRenderOptionsX fieldOptions, string aggregateGroup, string barcodeValue)
+        {
+            _shared.AddBarcodeValueToPrintMessage(linxPrintJob, fieldOptions, aggregateGroup, barcodeValue);
         }
 
         #endregion
