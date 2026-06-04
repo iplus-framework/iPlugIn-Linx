@@ -10,7 +10,6 @@ namespace linx.core.reporthandlerwpf
     [ACClassInfo(Const.PackName_VarioSystem, "en{'LinxPrinter'}de{'LinxPrinter'}", Global.ACKinds.TPABGModule, Global.ACStorableTypes.Required, false, false)]
     public partial class LinxPrinter : ACPrintServerBaseWPF, ILinxPrinter
     {
-        private ACPropertyConfigValue<bool> _UseScryberLayoutRenderer;
         private LinxPrinterXShared _shared;
 
         #region ctor's
